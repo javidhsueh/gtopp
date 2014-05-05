@@ -1,21 +1,21 @@
 __author__ = 'vidi'
 from math import exp, log, pow
 
-SIG = 4.2
+SIG = 35
 MU = 0
 
 
 def gaussian(value, distance):
-    return value * exp(-pow(distance - MU, 2.) / (2 * pow(SIG, 2.)))
+    return value * exp(-pow(distance, 2.) / (2 * pow(SIG, 2.)))
 
 
+# #
+# print gaussian(1, 1)
+# print gaussian(1, 2)
 #
-# print Gaussian(1, 1)
-# print Gaussian(1, 2)
+# print gaussian(1, 3)
+# print gaussian(1, 4)
+# print gaussian(1, 5)
 #
-# print Gaussian(1, 3)
-# print Gaussian(1, 4)
-# print Gaussian(1, 5)
-#
-# print Gaussian(1, 10)
+# print gaussian(1, 10)
 #

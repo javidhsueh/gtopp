@@ -37,6 +37,7 @@ CANVAS_HEIGHT = 900
 
 TOTAL_SPEICES = 1
 
+color_tables = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
 
 from_day = 325
 end_day = 334
@@ -46,8 +47,8 @@ all_grid = []
 
 for day in range(from_day, end_day):
 
-    all_grid = []
-    grid = load_grid("./test_data2/"+str(day)+".txt")
+    all_grid = []#number of species
+    grid = load_grid("./test_data/"+str(day)+".txt")
     # showNumGrid(grid)
     all_grid.append(grid)
 
@@ -56,8 +57,6 @@ for day in range(from_day, end_day):
     im = Image.new('RGBA', (CANVAS_WIDTH, CANVAS_HEIGHT), (0, 0, 0, 255))
     draw = ImageDraw.Draw(im)
 
-    # h,l,s = colorsys.rgb_to_hls(rd/255.,gn/255.,bl/255.)
-    color_tables = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
     for species_idx in xrange(TOTAL_SPEICES):
 
         layer = Image.new('RGBA', (CANVAS_WIDTH, CANVAS_HEIGHT))

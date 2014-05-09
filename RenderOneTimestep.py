@@ -36,45 +36,19 @@ def main(argv):
 
     # load data
 
-    all_grid = []
-    TOTAL_SPEICES = 3
-
-    for species_idx in xrange(TOTAL_SPEICES):
-
-        grid = genEmptyGrid()
-
-        path = genPath(TOTAL_DAYS)
-        day = TOTAL_DAYS - 1
-
-        for p in range(day-TIME_FRAME_WINDOW, day+1):
-            (x, y) = path[p]
-
-            center_value = 1 * decay(day-p)
-            grid[y][x] += center_value
-
-            for i in range(-1*GAUSSIAN_RANGE, +1*GAUSSIAN_RANGE):
-                for j in range(-1*GAUSSIAN_RANGE, +1*GAUSSIAN_RANGE):
-
-                    if i == 0 and j == 0:
-                        continue
-
-                    if 0 < x+i < GRID_WIDTH-1 and 0 < y+j < GRID_HEIGHT-1:
-
-                        dist = hypot(i, j)
-                        if dist <= GAUSSIAN_RANGE:
-                            grid[y+j][x+i] += gaussian(center_value, dist)
-
-        for j in xrange(GRID_HEIGHT):
-            for i in xrange(GRID_WIDTH):
-                if grid[j][i] > 1:
-                    grid[j][i] = 1
-
-        all_grid.append(grid)
-
 
     #  start to draw
     # CANVAS_WIDTH = 3600
     # CANVAS_HEIGHT = 1800
+
+
+    GRID_WIDTH = 1800
+    GRID_HEIGHT = 900
+
+    TIME_FRAME_WINDOW = 50
+
+    TOTAL_DAYS = 200
+
 
     CANVAS_WIDTH = 1800
     CANVAS_HEIGHT = 900
@@ -94,38 +68,39 @@ def main(argv):
             grid = genEmptyGrid()
             path = all_path[species_idx]
 
+            # collect the points in time frame
+            candidate_points = []
+            candidate_points_table = dict()
             if day < TIME_FRAME_WINDOW:
                 for p in range(0, day+1):
                     (x, y) = path[p]
                     center_value = 1 * decay(day-p)
-                    grid[y][x] += center_value
-                    for i in range(-1*GAUSSIAN_RANGE, +1*GAUSSIAN_RANGE):
-                        for j in range(-1*GAUSSIAN_RANGE, +1*GAUSSIAN_RANGE):
-                            if i == 0 and j == 0:
-                                continue
-                            if 0 < x+i < GRID_WIDTH-1 and 0 < y+j < GRID_HEIGHT-1:
-                                dist = hypot(i, j)
-                                if dist <= GAUSSIAN_RANGE:
-                                    grid[y+j][x+i] += gaussian(center_value, dist)
+                    grid[y][x] = center_value
+                    candidate_points.append(path[p])
+                    candidate_points_table[(x, y)] = center_value
 
             else:
                 for p in range(day-TIME_FRAME_WINDOW, day+1):
                     (x, y) = path[p]
                     center_value = 1 * decay(day-p)
-                    grid[y][x] += center_value
-                    for i in range(-1*GAUSSIAN_RANGE, +1*GAUSSIAN_RANGE):
-                        for j in range(-1*GAUSSIAN_RANGE, +1*GAUSSIAN_RANGE):
-                            if i == 0 and j == 0:
-                                continue
-                            if 0 < x+i < GRID_WIDTH-1 and 0 < y+j < GRID_HEIGHT-1:
-                                dist = hypot(i, j)
-                                if dist <= GAUSSIAN_RANGE:
-                                    grid[y+j][x+i] += gaussian(center_value, dist)
+                    grid[y][x] = center_value
+                    candidate_points.append(path[p])
+                    candidate_points_table[(x, y)] = center_value
 
+
+            # calculate the density map
             for j in xrange(GRID_HEIGHT):
                 for i in xrange(GRID_WIDTH):
-                    if grid[j][i] > 1:
-                        grid[j][i] = 1
+                    if (i,j) in candidate_points:
+                        continue
+                    else:
+                        aggregated_value = 0
+                        for p in candidate_points:
+                            dist = hypot(abs(i-p[0]), abs(j-p[1]))
+                            seed_value = candidate_points_table[p]
+                            aggregated_value += gaussian(seed_value, dist)
+                        grid[j][i] = aggregated_value
+
 
             all_grid.append(grid)
 
@@ -148,13 +123,14 @@ def main(argv):
             for x in xrange(CANVAS_WIDTH):
                 for y in xrange(CANVAS_HEIGHT):
 
-                    value = int(grid[y][x]*170)
+                    value = int(floor(grid[y][x]/0.2)*0.2*170)
                     pixels[x,y] = (color[0], color[1], color[2], value)
 
             im.paste(layer, mask=layer)
 
         # im.show()
-        im.save("./test_data/"+str(day)+".png")
+        output_file = "./output4/%03d.png" % day
+        im.save(output_file)
         print "done %s.png" % day
 
     # im_after = im.resize( (CANVAS_WIDTH*2, CANVAS_HEIGHT*2), Image.BILINEAR)

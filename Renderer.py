@@ -48,7 +48,7 @@ all_grid = []
 for day in range(from_day, end_day):
 
     all_grid = []#number of species
-    grid = load_grid("./test_data/"+str(day)+".txt")
+    grid = load_grid("./test_data2/"+str(day)+".txt")
     # showNumGrid(grid)
     all_grid.append(grid)
 
@@ -69,13 +69,14 @@ for day in range(from_day, end_day):
         for x in xrange(CANVAS_WIDTH):
             for y in xrange(CANVAS_HEIGHT):
 
-                value = int(grid[y][x]*170)
+                value = int(floor(grid[y][x]/0.2)*0.2*170)
                 pixels[x,y] = (color[0], color[1], color[2], value)
 
         im.paste(layer, mask=layer)
 
     # im.show()
-    im.save("./output/"+str(day)+".png")
+    output_file = "./output3/%03d.png" % day
+    im.save(output_file)
     print "done %s.png" % day
 
 

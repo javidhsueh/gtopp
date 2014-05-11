@@ -39,18 +39,26 @@ TOTAL_SPEICES = 1
 
 color_tables = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
 
-from_day = 325
-end_day = 334
+from_day = 0
+end_day = 1981
 
 all_grid = []
 
+counter = 0
+for day in range(from_day, end_day, 30):
 
-for day in range(from_day, end_day):
-
-    all_grid = []#number of species
-    grid = load_grid("./test_data2/"+str(day)+".txt")
+    all_grid = [] #number of species
+    grid = load_grid("./BlueShark_365/"+str(day)+".txt")
     # showNumGrid(grid)
     all_grid.append(grid)
+
+    # normalize the grid:
+    max_value = 0
+    for y in xrange(CANVAS_HEIGHT):
+        temp_max = max(grid[y])
+        max_value = max(max_value, temp_max)
+
+    print max_value
 
     print "start to draw day: %s" % day
 
@@ -68,15 +76,21 @@ for day in range(from_day, end_day):
 
         for x in xrange(CANVAS_WIDTH):
             for y in xrange(CANVAS_HEIGHT):
-
-                value = int(floor(grid[y][x]/0.2)*0.2*170)
-                pixels[x,y] = (color[0], color[1], color[2], value)
+                if grid[y][x] == 0:
+                    continue
+                else:
+                    # value = int( (floor( (grid[y][x]/max_value)/0.2))*0.2*170 )
+                    value = int( (floor(grid[y][x]/0.2))*0.2*170 )
+                    pixels[x,y] = (color[0], color[1], color[2], value)
 
         im.paste(layer, mask=layer)
 
+
     # im.show()
-    output_file = "./output3/%03d.png" % day
+    output_file = "./blueshark_output_365_2/%03d.png" % counter
     im.save(output_file)
     print "done %s.png" % day
+
+    counter += 1
 
 

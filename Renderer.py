@@ -1,15 +1,29 @@
-from GenerateFakeData import *
+
 import sys
 from PIL import Image, ImageDraw, ImageFont
 from random import randint
-from GenerateFakeData import *
 from math import floor
+import gzip
+
+
+
+CANVAS_WIDTH = 1600
+CANVAS_HEIGHT = 700
+
+TOTAL_SPEICES = 1
+
+
+
+def genEmptyGrid():
+    grid = [ [ 0 for i in range(CANVAS_WIDTH) ] for j in range(CANVAS_HEIGHT) ]
+    return grid
+
 
 
 def load_grid(fn):
     new_grid = genEmptyGrid()
     h = 0
-    with open(fn, "r") as file:
+    with gzip.open(fn, "rb") as file:
         for d in file.read().split("/t"):
             d2 = d.split(",")
 
@@ -22,25 +36,12 @@ def load_grid(fn):
     return new_grid
 
 
-# new_grid = genEmptyGrid()
-# showNumGrid(new_grid)
-#
-# g = load_grid("./test_data2/325.txt")
-# showNumGrid(g)
-#
-# exit()
 
-
-
-CANVAS_WIDTH = 1800
-CANVAS_HEIGHT = 900
-
-TOTAL_SPEICES = 1
 
 color_tables = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
 
 from_day = 0
-end_day = 1981
+end_day = 601
 
 all_grid = []
 
@@ -48,7 +49,7 @@ counter = 0
 for day in range(from_day, end_day, 30):
 
     all_grid = [] #number of species
-    grid = load_grid("./BlueShark_365/"+str(day)+".txt")
+    grid = load_grid("./BlueShark_part/"+str(day)+".gz")
     # showNumGrid(grid)
     all_grid.append(grid)
 
@@ -87,7 +88,7 @@ for day in range(from_day, end_day, 30):
 
 
     # im.show()
-    output_file = "./blueshark_output_365_2/%03d.png" % counter
+    output_file = "./BlueShark_part_output/%03d.png" % counter
     im.save(output_file)
     print "done %s.png" % day
 

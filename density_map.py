@@ -154,7 +154,7 @@ def create_grid(fn, fo):
                         lat = float(sample["lat"])
                         point = (int(round(long*5)), int(round((lat+90)*5)))
                         (x, y) = point
-                        center_value = 10 * decay(one-p)
+                        center_value = decay(one-p)
                         grid[y][x] = center_value
                         candidate_points.append(point)
                         candidate_points_table[(x, y)] = center_value
@@ -169,7 +169,7 @@ def create_grid(fn, fo):
                         lat = float(sample["lat"])
                         point = (int(round(long*5)), int(round((lat+90)*5)))
                         (x, y) = point
-                        center_value = 10 * decay(one-p)
+                        center_value = decay(one-p)
                         grid[y][x] = center_value
                         candidate_points.append(point)
                         candidate_points_table[(x, y)] = center_value

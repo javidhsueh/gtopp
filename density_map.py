@@ -10,9 +10,11 @@ from utils.Gaussian import gaussian
 from datetime import date
 from dateutil.rrule import rrule, DAILY
 import sys
+import StringIO
+import gzip
 
-GRID_WIDTH = 1800
-GRID_HEIGHT = 900
+GRID_WIDTH = 2200 #120~280
+GRID_HEIGHT = 700 #0~60
 
 TIME_FRAME_WINDOW = 150
 #GAUSSIAN_RANGE = 250
@@ -152,7 +154,7 @@ def create_grid(fn, fo):
                     for sample in all_position[table[p]]:
                         long = float(sample["long"])
                         lat = float(sample["lat"])
-                        point = (int(round(long*5)), int(round((lat+90)*5)))
+                        point = (int(round((long-120)*10)), int(round(lat*10)))
                         (x, y) = point
                         center_value = decay(one-p)
                         grid[y][x] = center_value
@@ -167,7 +169,7 @@ def create_grid(fn, fo):
                     for sample in all_position[table[p]]:
                         long = float(sample["long"])
                         lat = float(sample["lat"])
-                        point = (int(round(long*5)), int(round((lat+90)*5)))
+                        point = (int(round((long-120)*10)), int(round(lat*10)))
                         (x, y) = point
                         center_value = decay(one-p)
                         grid[y][x] = center_value
@@ -188,32 +190,43 @@ def create_grid(fn, fo):
 
                     grid[j][i] = aggregated_value
         #sys.exit()
-        with open("./"+fo+"/"+str(one)+".txt", "w") as f:
+
+        out = StringIO.StringIO()
+        with gzip.open("./"+fo+"/"+str(one)+".gz", "w") as f:
             for g in grid:
                 for gg in g:
                     f.write(str(gg)+",")
                 f.write("/t")
+        out.getvalue()
+        print out.getvalue()
+        # with open("./"+fo+"/"+str(one)+".txt", "w") as f:
+        #     for g in grid:
+        #         for gg in g:
+        #
+        #             f.write(str(gg)+",")
+        #         f.write("/t")
 
 
 def load_grid(fn):
     new_grid = genEmptyGrid()
     h = 0
-    with open(fn, "r") as file:
+    with gzip.open(fn, "rb") as file:
         for d in file.read().split("/t"):
             d2 = d.split(",")
 
             d2.pop()
             # print d2
+            # new_grid[h] = d2
             for w in range(len(d2)):
-                new_grid[h] = d2
+                new_grid[h][w] = float(d2[w])
             h += 1
-    # print new_grid
+    print new_grid
     return new_grid
-        # months = dict()
 
 
 if __name__ == '__main__':
     main(sys.argv[1:])
+    # load_grid("./BlueShark/0.gz")
     # read_data("BlueShark.csv")
     # read_data("WhiteShark.csv")
     # read_data("SalmonShark.csv")

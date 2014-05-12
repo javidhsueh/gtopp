@@ -1,7 +1,7 @@
 __author__ = 'vidi'
 from math import exp, log, pow
 
-SIG = 20
+SIG = 5
 MU = 0
 
 

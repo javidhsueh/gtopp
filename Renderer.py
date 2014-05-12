@@ -41,7 +41,7 @@ def load_grid(fn):
 color_tables = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
 
 from_day = 0
-end_day = 601
+end_day = 31
 
 all_grid = []
 
@@ -49,7 +49,7 @@ counter = 0
 for day in range(from_day, end_day, 30):
 
     all_grid = [] #number of species
-    grid = load_grid("./BlueShark_part/"+str(day)+".gz")
+    grid = load_grid("./WhiteShark_150_g5/"+str(day)+".gz")
     # showNumGrid(grid)
     all_grid.append(grid)
 
@@ -66,6 +66,9 @@ for day in range(from_day, end_day, 30):
     im = Image.new('RGBA', (CANVAS_WIDTH, CANVAS_HEIGHT), (0, 0, 0, 255))
     draw = ImageDraw.Draw(im)
 
+    background = Image.open ("images/map.png")
+    im.paste(background, mask=background)
+
     for species_idx in xrange(TOTAL_SPEICES):
 
         layer = Image.new('RGBA', (CANVAS_WIDTH, CANVAS_HEIGHT))
@@ -80,15 +83,15 @@ for day in range(from_day, end_day, 30):
                 if grid[y][x] == 0:
                     continue
                 else:
-                    # value = int( (floor( (grid[y][x]/max_value)/0.2))*0.2*170 )
-                    value = int( (floor(grid[y][x]/0.2))*0.2*170 )
+                    value = int( (floor( (grid[y][x]/max_value)/0.2))*0.2*170 )
+                    # value = int( (floor(grid[y][x]/0.2))*0.2*170 )
                     pixels[x,y] = (color[0], color[1], color[2], value)
 
         im.paste(layer, mask=layer)
 
 
     # im.show()
-    output_file = "./BlueShark_part_output/%03d.png" % counter
+    output_file = "./WhiteShark_output_150_g5/%03d.png" % counter
     im.save(output_file)
     print "done %s.png" % day
 

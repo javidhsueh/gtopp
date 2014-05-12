@@ -13,7 +13,7 @@ import sys
 import StringIO
 import gzip
 
-GRID_WIDTH = 2200 #120~280
+GRID_WIDTH = 1600 #120~280
 GRID_HEIGHT = 700 #0~60
 
 TIME_FRAME_WINDOW = 150
@@ -115,8 +115,17 @@ def gaussian_table():
     return g_table
 
 
+def dist_table():
+    d_table = dict()
+    for i in range(GRID_WIDTH):
+        for j in range(GRID_HEIGHT):
+            d_table[(i,j)] = hypot(i, j)
+    return d_table
+
+
 def create_grid(fn, fo):
     g_table = gaussian_table()
+    d_table = dist_table()
 
     all_position = read_json(fn)
     total_day = 0
@@ -156,7 +165,9 @@ def create_grid(fn, fo):
                         lat = float(sample["lat"])
                         point = (int(round((long-120)*10)), int(round(lat*10)))
                         (x, y) = point
+
                         center_value = decay(one-p)
+                        # print "day: %s, p: %s, delta_day: %s, decay: %s" %(one,p, (one-p) , center_value)
                         grid[y][x] = center_value
                         candidate_points.append(point)
                         candidate_points_table[(x, y)] = center_value
@@ -172,6 +183,7 @@ def create_grid(fn, fo):
                         point = (int(round((long-120)*10)), int(round(lat*10)))
                         (x, y) = point
                         center_value = decay(one-p)
+                        # print "day: %s, p: %s, delta_day: %s, decay: %s" %(one,p, (one-p) , center_value)
                         grid[y][x] = center_value
                         candidate_points.append(point)
                         candidate_points_table[(x, y)] = center_value
@@ -181,8 +193,9 @@ def create_grid(fn, fo):
                     aggregated_value = 0
                     for p_idx in range(len(candidate_points)):
                         p = candidate_points[p_idx]
-                        dist = hypot(abs(i-p[0]), abs(j-p[1]))
-                        if dist < 300:
+                        # dist = hypot(abs(i-p[0]), abs(j-p[1]))
+                        dist = d_table[(abs(i-p[0]), abs(j-p[1]))]
+                        if dist < 190:
                             seed_value = candidate_points_table[p]
                             aggregated_value += seed_value * g_table[dist][0]
                             # print "pixel(%s,%s), seed point[%s]:(%s,%s)" % (i,j,p_idx, p[0],p[1])

@@ -6,7 +6,7 @@ import simplejson
 import json
 from utils.Decay import decay
 from math import hypot
-from utils.Gaussian import gaussian
+from utils.Gaussian import gaussian, decay_gaussian
 from datetime import date
 from dateutil.rrule import rrule, DAILY
 import sys
@@ -85,12 +85,8 @@ def read_data(fn):
 
 
 def read_json(fn):
-    data = []
     with open(fn, "rb") as json_file:
         raw_data = json.load(json_file)
-        #raw_data=json_file.read()
-        #print raw_data["2003-12"]
-    #print raw_data
     return raw_data
 
 
@@ -99,20 +95,20 @@ def genEmptyGrid():
     return grid
 
 
-def gaussian_table():
+def gaussian_table(d_table):
     g_table = dict()
-    test = []
-    for i in range(300):
-        for j in range(300):
-            d = hypot(abs(i), abs(j))
-            g_table[d] = []
-            #print float(gaussian(1, d))
-            g_table[d].append(gaussian(1, d))
-            # if d == 499.961998556:
-            #     print d
-            #test.append(d)
-    #print max(test)
+    for i in range(200):
+        for j in range(200):
+            d = d_table[(i, j)]
+            g_table[d] = gaussian(1, d)
     return g_table
+
+
+def gen_decay_table():
+    d_table = dict()
+    for i in xrange(TIME_FRAME_WINDOW+1):
+        d_table[i] = decay_gaussian(TIME_FRAME_WINDOW/2, i)
+    return d_table
 
 
 def dist_table():
@@ -124,8 +120,9 @@ def dist_table():
 
 
 def create_grid(fn, fo):
-    g_table = gaussian_table()
     d_table = dist_table()
+    g_table = gaussian_table(d_table)
+    decay_table = gen_decay_table()
 
     all_position = read_json(fn)
     total_day = 0
@@ -148,6 +145,7 @@ def create_grid(fn, fo):
     print total_day
     #sys.exit()
 
+    total_day = 301
     for one in range(0, total_day, 30): #total_day
         grid = genEmptyGrid()
 
@@ -161,12 +159,14 @@ def create_grid(fn, fo):
                 if table[p] in all_position:
                     #print table[p], all_position[table[p]]
                     for sample in all_position[table[p]]:
-                        long = float(sample["long"])
+                        lng = float(sample["long"])
                         lat = float(sample["lat"])
-                        point = (int(round((long-120)*10)), int(round(lat*10)))
+                        point = (int(round((lng-120)*10)), int(round(lat*10)))
                         (x, y) = point
 
-                        center_value = decay(one-p)
+                        # center_value = decay(one-p)
+                        center_value = decay_table[one-p]
+
                         # print "day: %s, p: %s, delta_day: %s, decay: %s" %(one,p, (one-p) , center_value)
                         grid[y][x] = center_value
                         candidate_points.append(point)
@@ -178,11 +178,12 @@ def create_grid(fn, fo):
                 if table[p] in all_position:
                     # print all_position[table[p]]
                     for sample in all_position[table[p]]:
-                        long = float(sample["long"])
+                        lng = float(sample["long"])
                         lat = float(sample["lat"])
-                        point = (int(round((long-120)*10)), int(round(lat*10)))
+                        point = (int(round((lng-120)*10)), int(round(lat*10)))
                         (x, y) = point
-                        center_value = decay(one-p)
+                        # center_value = decay(one-p)
+                        center_value = decay_table[one-p]
                         # print "day: %s, p: %s, delta_day: %s, decay: %s" %(one,p, (one-p) , center_value)
                         grid[y][x] = center_value
                         candidate_points.append(point)
@@ -191,27 +192,32 @@ def create_grid(fn, fo):
         for j in xrange(GRID_HEIGHT):
                 for i in xrange(GRID_WIDTH):
                     aggregated_value = 0
+                    max_val = 0
                     for p_idx in range(len(candidate_points)):
                         p = candidate_points[p_idx]
                         # dist = hypot(abs(i-p[0]), abs(j-p[1]))
                         dist = d_table[(abs(i-p[0]), abs(j-p[1]))]
                         if dist < 190:
                             seed_value = candidate_points_table[p]
-                            aggregated_value += seed_value * g_table[dist][0]
+                            # aggregated_value += seed_value * g_table[dist]
+                            g = seed_value * g_table[dist]
+                            if g > max_val:
+                                max_val = g
                             # print "pixel(%s,%s), seed point[%s]:(%s,%s)" % (i,j,p_idx, p[0],p[1])
                             # print "dist: %s, seed_value: %s, g=%s" % (dist, seed_value, g_table[dist][0])
 
-                    grid[j][i] = aggregated_value
+                    # grid[j][i] = aggregated_value
+                    grid[j][i] = max_val
         #sys.exit()
 
         out = StringIO.StringIO()
         with gzip.open("./"+fo+"/"+str(one)+".gz", "w") as f:
             for g in grid:
-                for gg in g:
-                    f.write(str(gg)+",")
-                f.write("/t")
-        out.getvalue()
-        print out.getvalue()
+                row = ",".join("%s" % i for i in g)
+                f.write(row+"/t")
+        out.close()
+        # out.getvalue()
+        # print out.getvalue()
         # with open("./"+fo+"/"+str(one)+".txt", "w") as f:
         #     for g in grid:
         #         for gg in g:

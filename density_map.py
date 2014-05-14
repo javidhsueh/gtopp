@@ -1,4 +1,4 @@
-__author__ = 'tlfung'
+
 import csv
 import numpy
 import datetime
@@ -15,6 +15,8 @@ import gzip
 
 GRID_WIDTH = 1600 #120~280
 GRID_HEIGHT = 700 #0~60
+
+GAUSSIAN_RANGE = 180
 
 TIME_FRAME_WINDOW = 150
 #GAUSSIAN_RANGE = 250
@@ -97,10 +99,15 @@ def genEmptyGrid():
 
 def gaussian_table(d_table):
     g_table = dict()
-    for i in range(200):
-        for j in range(200):
+    for i in range(GAUSSIAN_RANGE+1):
+        for j in range(GAUSSIAN_RANGE+1):
             d = d_table[(i, j)]
             g_table[d] = gaussian(1, d)
+            # if d < GAUSSIAN_RANGE:
+            # # g_table[d] = gaussian(1, d)
+            #     g_table[d] = d/GAUSSIAN_RANGE
+            # else:
+            #     g_table[d] = 0
     return g_table
 
 
@@ -145,8 +152,8 @@ def create_grid(fn, fo):
     print total_day
     #sys.exit()
 
-    total_day = 301
-    for one in range(0, total_day, 30): #total_day
+    # total_day = 301
+    for one in range(0, total_day): #total_day
         grid = genEmptyGrid()
 
         # collect the points in time frame
@@ -163,10 +170,7 @@ def create_grid(fn, fo):
                         lat = float(sample["lat"])
                         point = (int(round((lng-120)*10)), int(round(lat*10)))
                         (x, y) = point
-
-                        # center_value = decay(one-p)
                         center_value = decay_table[one-p]
-
                         # print "day: %s, p: %s, delta_day: %s, decay: %s" %(one,p, (one-p) , center_value)
                         grid[y][x] = center_value
                         candidate_points.append(point)
@@ -182,32 +186,44 @@ def create_grid(fn, fo):
                         lat = float(sample["lat"])
                         point = (int(round((lng-120)*10)), int(round(lat*10)))
                         (x, y) = point
-                        # center_value = decay(one-p)
                         center_value = decay_table[one-p]
                         # print "day: %s, p: %s, delta_day: %s, decay: %s" %(one,p, (one-p) , center_value)
                         grid[y][x] = center_value
                         candidate_points.append(point)
                         candidate_points_table[(x, y)] = center_value
 
-        for j in xrange(GRID_HEIGHT):
-                for i in xrange(GRID_WIDTH):
-                    aggregated_value = 0
-                    max_val = 0
-                    for p_idx in range(len(candidate_points)):
-                        p = candidate_points[p_idx]
-                        # dist = hypot(abs(i-p[0]), abs(j-p[1]))
-                        dist = d_table[(abs(i-p[0]), abs(j-p[1]))]
-                        if dist < 190:
-                            seed_value = candidate_points_table[p]
-                            # aggregated_value += seed_value * g_table[dist]
-                            g = seed_value * g_table[dist]
-                            if g > max_val:
-                                max_val = g
-                            # print "pixel(%s,%s), seed point[%s]:(%s,%s)" % (i,j,p_idx, p[0],p[1])
-                            # print "dist: %s, seed_value: %s, g=%s" % (dist, seed_value, g_table[dist][0])
+        for p_idx in range(len(candidate_points)):
+            p = candidate_points[p_idx]
+            (x, y) = p
+            seed_value = candidate_points_table[p]
+            for i in range(-1*GAUSSIAN_RANGE, +1*GAUSSIAN_RANGE):
+                for j in range(-1*GAUSSIAN_RANGE, +1*GAUSSIAN_RANGE):
+                    # if i == 0 and j == 0:
+                    #     continue
+                    if 0 <= x+i <= GRID_WIDTH-1 and 0 <= y+j <= GRID_HEIGHT-1:
+                        dist = d_table[(abs(i), abs(j))]
+                        spread_value = seed_value * g_table[dist]
+                        if spread_value > grid[y+j][x+i]:
+                            grid[y+j][x+i] = spread_value
 
-                    # grid[j][i] = aggregated_value
-                    grid[j][i] = max_val
+        # for j in xrange(GRID_HEIGHT):
+        #         for i in xrange(GRID_WIDTH):
+        #             aggregated_value = 0
+        #             max_val = 0
+        #             for p_idx in range(len(candidate_points)):
+        #                 p = candidate_points[p_idx]
+        #                 dist = d_table[(abs(i-p[0]), abs(j-p[1]))]
+        #                 if dist < 190:
+        #                     seed_value = candidate_points_table[p]
+        #                     # aggregated_value += seed_value * g_table[dist]
+        #                     g = seed_value * g_table[dist]
+        #                     if g > max_val:
+        #                         max_val = g
+        #                     # print "pixel(%s,%s), seed point[%s]:(%s,%s)" % (i,j,p_idx, p[0],p[1])
+        #                     # print "dist: %s, seed_value: %s, g=%s" % (dist, seed_value, g_table[dist][0])
+        #
+        #             # grid[j][i] = aggregated_value
+        #             grid[j][i] = max_val
         #sys.exit()
 
         out = StringIO.StringIO()
@@ -216,31 +232,6 @@ def create_grid(fn, fo):
                 row = ",".join("%s" % i for i in g)
                 f.write(row+"/t")
         out.close()
-        # out.getvalue()
-        # print out.getvalue()
-        # with open("./"+fo+"/"+str(one)+".txt", "w") as f:
-        #     for g in grid:
-        #         for gg in g:
-        #
-        #             f.write(str(gg)+",")
-        #         f.write("/t")
-
-
-def load_grid(fn):
-    new_grid = genEmptyGrid()
-    h = 0
-    with gzip.open(fn, "rb") as file:
-        for d in file.read().split("/t"):
-            d2 = d.split(",")
-
-            d2.pop()
-            # print d2
-            # new_grid[h] = d2
-            for w in range(len(d2)):
-                new_grid[h][w] = float(d2[w])
-            h += 1
-    print new_grid
-    return new_grid
 
 
 if __name__ == '__main__':

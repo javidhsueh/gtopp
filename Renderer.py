@@ -13,11 +13,9 @@ CANVAS_HEIGHT = 700
 TOTAL_SPEICES = 1
 
 
-
 def genEmptyGrid():
     grid = [ [ 0 for i in range(CANVAS_WIDTH) ] for j in range(CANVAS_HEIGHT) ]
     return grid
-
 
 
 def load_grid(fn):
@@ -36,12 +34,10 @@ def load_grid(fn):
     return new_grid
 
 
-
-
-color_tables = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+color_tables = [(180, 50, 130), (0, 255, 0), (0, 0, 255)]
 
 from_day = 0
-end_day = 31
+end_day = 3871
 
 all_grid = []
 
@@ -49,7 +45,7 @@ counter = 0
 for day in range(from_day, end_day, 30):
 
     all_grid = [] #number of species
-    grid = load_grid("./WhiteShark_150_g5/"+str(day)+".gz")
+    grid = load_grid("./BlueShark/"+str(day)+".gz")
     # showNumGrid(grid)
     all_grid.append(grid)
 
@@ -91,7 +87,7 @@ for day in range(from_day, end_day, 30):
 
 
     # im.show()
-    output_file = "./WhiteShark_output_150_g5/%03d.png" % counter
+    output_file = "./BlueShark_output/%03d.png" % counter
     im.save(output_file)
     print "done %s.png" % day
 
